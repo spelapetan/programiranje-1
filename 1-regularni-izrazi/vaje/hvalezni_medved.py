@@ -6,6 +6,8 @@
 # medved*.
 ###############################################################################
 
+import re
+
 test_text = """Gori nekje v gorah, ne ve se več, ali je bilo pri Macigoju ali
 Naravniku, je šivala gospodinja v senci pod drevesom in zibala otroka. Naenkrat
 prilomasti - pa prej ni ničesar opazila - medved in ji moli taco, v kateri je
@@ -27,6 +29,14 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 ###############################################################################
 
 
+def find_words(besedilo, podniz):
+    mnozica = set()
+    vzorec = r"\b\w*" + podniz + r"\w*\b"
+    for ujemanje in re.finditer(vzorec, besedilo):
+        b = ujemanje.group(0)
+        mnozica.add(b)
+    return mnozica
+
 ###############################################################################
 # 2) Sestavite funkcijo [find_prefix], ki vrne množico vseh besed, ki se
 #    pojavijo v nizu in imajo dano predpono.
@@ -35,6 +45,14 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # {'zibala', 'zibel', 'zibelko'}
 ###############################################################################
 
+
+def find_prefix(besedilo, predpona):
+    mnozica = set()
+    vzorec = r"\b" + predpona + r"\w*\b"
+    for ujemanje in re.finditer(vzorec, besedilo):
+        b = ujemanje.group(0)
+        mnozica.add(b)
+    return mnozica
 
 ###############################################################################
 # 3) Sestavite funkcijo [find_suffix], ki vrne množico vseh besed, ki se
@@ -45,6 +63,14 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 ###############################################################################
 
 
+def find_suffix(besedilo, pripona):
+    mnozica = set()
+    vzorec = r"\b\w*" + pripona + r"\b"
+    for ujemanje in re.finditer(vzorec, besedilo):
+        b = ujemanje.group(0)
+        mnozica.add(b)
+    return mnozica
+
 ###############################################################################
 # 4) Sestavite funkcijo [double_letters], ki sprejme niz in vrne množico vseh
 #    besed, ki vsebujejo podvojene črke.
@@ -52,3 +78,12 @@ medved. Zvrhano zibelko sladkih hrušk mi je prinesel za en sam izdrt trn"."""
 # >>> double_letters('A volunteer is worth twenty pressed men.')
 # {'volunteer', 'pressed'}
 ###############################################################################
+
+
+def double_letters(niz):
+    mnozica = set()
+    vzorec = r"\b\w{2}\w*\b"
+    for ujemanje in re.finditer(vzorec, niz):
+        b = ujemanje.group(0)
+        mnozica.add(b)
+    return mnozica
