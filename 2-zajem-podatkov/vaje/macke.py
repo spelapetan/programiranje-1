@@ -45,6 +45,7 @@ def save_string_to_file(text, directory, filename):
 # Definirajte funkcijo, ki prenese glavno stran in jo shrani v datoteko.
 
 
+
 def save_frontpage():
     '''Save "cats_frontpage_url" to the file
     "cat_directory"/"frontpage_filename"'''
@@ -56,6 +57,7 @@ def save_frontpage():
 ###############################################################################
 # Po pridobitvi podatkov jih želimo obdelati.
 ###############################################################################
+
 
 
 def read_file_to_string(directory, filename):
@@ -87,22 +89,31 @@ def page_to_ads(filename):
 # podatke o imenu, ceni in opisu v oglasu.
 
 
-def get_dict_from_ad_block(TODO):
+def get_dict_from_ad_block(oglas):
     '''Build a dictionary containing the name, description and price
     of an ad block.'''
     vzorec = re.compile(
-        r'<table><tr><td><a title=(?P<ime>,+?)'
+        r'<table><tr><td><a title=(?P<ime>,+?) href=.*'
+        r'<div class="price">(<span>)?(?P<cena>,+?)</span></div>'
+        r'href=.*</a></h3>(?P<opis>,+?)<div class="coloumn badges">'
     )
-    return TODO
+    podatki_oglasa = oglas.groupdict()
+    podatki_oglasa['ime'] = podatki_oglasa['ime'].strip()
+    podatki_oglasa['cena'] = int(podatki_oglasa['cena'])
+    podatki_oglasa['opis'] = podatki_oglasa['opis'].strip()
+    return podatki_oglasa
 
 # Definirajte funkcijo, ki sprejme ime in lokacijo datoteke, ki vsebuje
 # besedilo spletne strani, in vrne seznam slovarjev, ki vsebujejo podatke o
 # vseh oglasih strani.
 
 
-def ads_from_file(TODO):
+def ads_from_file(url, filename):
     '''Parse the ads in filename/directory into a dictionary list.'''
-    return TODO
+    podatki = []
+    for oglas in page_to_ads(filename):
+        podatki.add(get_dict_from_ad_block(oglas))
+    return podatki
 
 ###############################################################################
 # Obdelane podatke želimo sedaj shraniti.
@@ -127,5 +138,5 @@ def write_csv(fieldnames, rows, directory, filename):
 # stolpce [fieldnames] pridobite iz slovarjev.
 
 
-def write_cat_ads_to_csv(TODO):
+def write_cat_ads_to_csv(sez):
     return TODO
