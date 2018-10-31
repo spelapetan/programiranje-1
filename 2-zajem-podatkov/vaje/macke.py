@@ -137,12 +137,6 @@ def write_csv(fieldnames, rows, directory, filename):
 # stolpce [fieldnames] pridobite iz slovarjev.
 
 
-def write_cat_ads_to_csv(ads, directory, filename):
+def write_cat_ads_to_csv(ads):
     '''Write a CSV file containing one ad from "ads" on each row.'''
-    write_csv(ads[0].keys(), ads, directory, filename)
-
-
-def write_cat_csv():
-    '''Save "ads" to "cat_directory"/"csv_filename"'''
-    ads = page_to_ads(frontpage_filename)
-    write_cat_ads_to_csv(ads, cat_directory, csv_filename)
+    write_csv(ads[0].keys(), ads, cat_directory, csv_filename)
