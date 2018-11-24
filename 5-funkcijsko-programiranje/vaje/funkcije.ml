@@ -197,7 +197,13 @@ let rec unzip = function
  - : int list * string list = ([0; 1; 2], ["a"; "b"; "c"])
 [*----------------------------------------------------------------------------*)
 
-let rec unzip_tlrec = ()
+let unzip_tlrec list =
+  let rec unzip_aux list acc1 acc2 =
+    match list with 
+    | [] -> (reverse acc1, reverse acc2)
+    | (x, y) :: rep -> unzip_aux rep (x :: acc1) (y :: acc2)
+    in
+    unzip_aux list [] []
 
 (*----------------------------------------------------------------------------*]
  Funkcija [fold_left_no_acc f list] sprejme seznam [x0; x1; ...; xn] in
@@ -209,7 +215,10 @@ let rec unzip_tlrec = ()
  - : string = "FICUS"
 [*----------------------------------------------------------------------------*)
 
-let rec fold_left_no_acc = ()
+let rec fold_left_no_acc f = function
+  | [] | _ :: [] -> failwith "List too short."
+  | x :: y :: [] -> f x y
+  | x :: y :: rep -> fold_left_no_acc f ((f x y) :: rep)
 
 (*----------------------------------------------------------------------------*]
  Funkcija [apply_sequence f x n] vrne seznam zaporednih uporab funkcije [f] na
@@ -223,7 +232,14 @@ let rec fold_left_no_acc = ()
  - : int list = []
 [*----------------------------------------------------------------------------*)
 
-let rec apply_sequence = ()
+let apply_sequence f x n =
+  let rec apply_aux f x n acc =
+    if n < 0 then
+      reverse acc
+    else
+      apply_aux f (f x) (n - 1) (x :: acc)
+  in
+  apply_aux f x n []
 
 (*----------------------------------------------------------------------------*]
  Funkcija [filter f list] vrne seznam elementov [list], pri katerih funkcija [f]
@@ -233,7 +249,9 @@ let rec apply_sequence = ()
  - : int list = [4; 5]
 [*----------------------------------------------------------------------------*)
 
-let rec filter = ()
+let rec filter f list =
+  | [] -> []
+  | x :: xs -> if f x then x :: filter f xs
 
 (*----------------------------------------------------------------------------*]
  Funkcija [exists] sprejme seznam in funkcijo, ter vrne vrednost [true] čim
@@ -246,7 +264,10 @@ let rec filter = ()
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
-let rec exists = ()
+let rec exists f list = function
+  | [] -> false
+  | x :: xs -> if f x then true else exists f xs
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [first f default list] vrne prvi element seznama, za katerega
@@ -259,4 +280,6 @@ let rec exists = ()
  - : int = 0
 [*----------------------------------------------------------------------------*)
 
-let rec first = ()
+let rec first f default list = function
+  | [] -> default
+  | x :: xs -> if f x then x else f default xs
