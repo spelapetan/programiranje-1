@@ -114,13 +114,10 @@ let rec map_tree f tree =
  - : int list = [0; 2; 5; 6; 7; 11]
 [*----------------------------------------------------------------------------*)
 
-let list_of_tree tree =
-    let rec list_of_tree' tree acc =
-        match tree with
-        | Empty -> acc
-        | Node(lt, x, rt) ->  (x :: acc)
-
-    in list_of_tree' tree []
+let list_of_tree tree = function
+  | Empty -> []
+  | Node(lt, x, rt) -> (list_of_tree lt) @ [x] @ (list_of_tree rt)
+        
 
 (*----------------------------------------------------------------------------*]
  Funkcija [is_bst] preveri ali je drevo binarno iskalno drevo (Binary Search 
@@ -133,10 +130,17 @@ let list_of_tree tree =
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let rec drevo_urejeno sez = function
+      | [] -> true
+      | x :: [] -> true
+      | x :: y :: xs -> if x <= y then drevo_urejeno (y :: xs) else false
+
+
+
 let is_bst tree =
     match tree with
     | Empty -> true
-    | Node(lt, x, rt) ->
+    | Node(lt, x, rt) -> if drevo_urejeno (list_of_tree tree) else false
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  V nadaljevanju predpostavljamo, da imajo dvojiška drevesa strukturo BST.
@@ -152,6 +156,20 @@ let is_bst tree =
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let rec insert x tree =
+  match tree with
+  | Empty -> Node(Empty, x, Empty)
+  | Node(lt, y, rt) ->
+    if x < y then Node(insert x lt, y, rt)
+    else Node(lt, y, insert x rt)
+
+let rec member x tree =
+  match tree with
+  | Empty -> false
+  | Node(lt, y, rt) when x = y -> true
+  | Node(lt, y, rt) when x < y -> member x lt
+  | Node(lt, y, rt) when x > y -> member x rt
+    
 
 (*----------------------------------------------------------------------------*]
  Funkcija [member2] ne privzame, da je drevo bst.
@@ -159,6 +177,7 @@ let is_bst tree =
  Opomba: Premislte kolikšna je časovna zahtevnost funkcije [member] in kolikšna
  funkcije [member2] na drevesu z n vozlišči, ki ima globino log(n). 
 [*----------------------------------------------------------------------------*)
+
 
 
 (*----------------------------------------------------------------------------*]
@@ -174,6 +193,15 @@ let is_bst tree =
  - : int option = None
 [*----------------------------------------------------------------------------*)
 
+let rec tree_min = function
+  | Empty -> None
+  | Node(Empty, x, _) -> Some x
+  | Node(lt, _, _) -> tree_min lt
+
+
+let succ = function
+  | Empty -> None
+  | Node(_, _, rt) -> tree_min rt
 
 (*----------------------------------------------------------------------------*]
  Na predavanjih ste omenili dva načina brisanja elementov iz drevesa. Prvi 
@@ -187,6 +215,23 @@ let is_bst tree =
  Node (Node (Node (Empty, 0, Empty), 2, Empty), 5,
  Node (Node (Empty, 6, Empty), 11, Empty))
 [*----------------------------------------------------------------------------*)
+
+let rec delete x tree =
+  match tree with
+  | Empty -> (* Empty case *) Empty
+  | Node(Empty, y, Empty) when x = y -> (* Leaf case *) Empty
+  | Node(Empty, y, rt) when x = y -> (* One sided *) rt
+  | Node(lt, y, Empty) when x = y -> (* One sided *) lt 
+  | Node(lt, y, rt) when x <> y -> (* Recurse deeper *)
+    if x > y then
+      Node(lt, y, delete x rt)
+    else
+      Node(delete x lt, y, rt)
+  | Node(lt, y, rt) ->
+    match succ tree with
+    | None -> failwith "This is not possible"
+    | Some z -> Node(lt, z, delete z rt)
+
 
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
