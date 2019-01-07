@@ -28,6 +28,26 @@
 ##############################################################################
 
 
+def pivot(a, start, end):
+    p = a[start]
+    for i in range(start + 1, end + 1):
+        if a[i] <= p:
+            pass
+        else:
+            for j in range(i + 1, end + 1):
+                if a[j] <= p:
+                    a[i], a[j] = a[j], a[i]
+                else:
+                    pass
+    indeks = start
+    for k in range(start + 1, end + 1):
+        if a[k] <= p:
+            a[k - 1], a[k] = a[k], a[k - 1]
+            indeks += 1
+        else:
+            pass
+    return indeks
+
 
 ##############################################################################
 # Tabelo a želimo urediti z algoritmom hitrega urejanja (quicksort).
@@ -42,6 +62,28 @@
 #   >>> quicksort(a)
 #   [2, 3, 4, 5, 10, 11, 15, 17, 18]
 ##############################################################################
+
+
+def quicksort_part(a, start, end):
+    #ustavi ce sta start in end cudna
+    if start >= end:
+        return a
+    else:
+        indeks = pivot(a, start, end)
+        # start : indeks -> manjsi
+        # indeks -> pivot na pravem mestu
+        # indeks + 1 : end -> vecji
+        #uredi manjse
+        #uredi vecji
+        #koncaj
+        quicksort_part(a, start, indeks - 1)
+        quicksort_part(a, indeks + 1, end)
+    return a
+
+
+def quicksort(a):
+    return quicksort_part(a, 0, len(a)-1)
+
 
 
 
@@ -59,3 +101,6 @@
 # element po velikosti. Funkcija sme spremeniti tabelo [a]. Cilj naloge je, da
 # jo rešite brez da v celoti uredite tabelo [a].
 ##############################################################################
+
+def kth_element(a, k):
+    return quicksort(a)[k]
