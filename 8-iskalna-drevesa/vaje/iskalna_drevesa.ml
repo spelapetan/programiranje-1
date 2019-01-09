@@ -102,7 +102,7 @@ let tl_rec size tree =
 
 let rec map_tree f tree =
     match tree with
-    | Empty -> 0
+    | Empty -> Empty
     | Node(lt, x, rt) -> Node(map_tree f lt, f x, map_tree f rt)
 
 
@@ -179,6 +179,10 @@ let rec member x tree =
 [*----------------------------------------------------------------------------*)
 
 
+let rec member2 x = function
+  | Empty -> false
+  | Node(lt, x, rt) -> x = y || (member2 x lt) || (member2 x rt)
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [succ] vrne naslednjika korena danega drevesa, če obstaja. Za drevo
@@ -246,6 +250,9 @@ let rec delete x tree =
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
 
 
+type ('key, 'value) dict = ('key * 'value) tree
+
+
 (*----------------------------------------------------------------------------*]
  Napišite testni primer [test_dict]:
       "b":1
@@ -254,6 +261,9 @@ let rec delete x tree =
          /
      "c":-2
 [*----------------------------------------------------------------------------*)
+
+
+let test_dict (string, int) dict = Node (leaf ("a", 0), ("b", 1), Node (leaf ("c", -2), ("d", 2), Empty))
 
 
 (*----------------------------------------------------------------------------*]
@@ -266,7 +276,20 @@ let rec delete x tree =
  - : int option = Some (-2)
 [*----------------------------------------------------------------------------*)
 
-      
+
+let rec dict_get key dict = function
+  | Empty -> None
+  | Node (lt, ('k, v), rt) ->
+    if key = k' then
+      Some v
+    else if key < 'k then
+      dict_get key lt
+    else
+      disct_get key rt
+
+
+
+
 (*----------------------------------------------------------------------------*]
  Funkcija [print_dict] sprejme slovar s ključi tipa [string] in vrednostmi tipa
  [int] in v pravilnem vrstnem redu izpiše vrstice "ključ : vrednost" za vsa
@@ -282,6 +305,15 @@ let rec delete x tree =
  d : 2
  - : unit = ()
 [*----------------------------------------------------------------------------*)
+
+
+let rec print_dict = function
+  | Empty -> ()
+  | Node (lt, (k, v), rt) -> (
+    print_dict lt;
+    print_string (k ^ " : "); print_int v; print_newline();
+    print_dict rt
+  )
 
 
 (*----------------------------------------------------------------------------*]
@@ -303,3 +335,9 @@ let rec delete x tree =
  - : unit = ()
 [*----------------------------------------------------------------------------*)
 
+
+let rec dict_insert key value dict = function
+  | Empty -> leaf (k, v)
+  | Node (l, (k', _), r) when k = k' -> Node (l, (k, v), r)
+  | Node (l, (k', v'), r) when k' < k -> Node (dict_insert k v l, (k', v'), r)
+  | Node (l, (k', v'), r) when k' > k -> Node (l, (k', v'), dict_insert k v r)
