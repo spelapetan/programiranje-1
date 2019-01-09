@@ -22,6 +22,14 @@
 [*----------------------------------------------------------------------------*)
 
 
+type euro = Euro of float
+
+type dollar = Dollar of float
+
+let euro_to_dollar (Euro x) = Dollar (x *. 1.145279)
+
+let dollar_to_euro (Dollar x) = Euro (x *. 0.873100134)
+
 
 (*----------------------------------------------------------------------------*]
  Definirajte tip [currency] kot en vsotni tip z konstruktorji za jen, funt
@@ -35,6 +43,16 @@
  - : currency = Pound 0.007
 [*----------------------------------------------------------------------------*)
 
+
+type currency =
+  | Yen of float
+  | Pound of float
+  | Krona of float
+
+let to_pound = function
+  | Yen x -> Pound (0.00721543439 *. x)
+  | Krona x -> Pound (0.0879640681 *. x)
+  | Pound x -> Pound x
 
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
@@ -58,6 +76,13 @@
 [*----------------------------------------------------------------------------*)
 
 
+type intbool_list =
+  | Nil
+  | Int of int * intbool_list
+  | Bool of bool * intbool_list
+  
+let test = Int(5, Bool(true, Bool(false, Int(7, Nil))))
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_map f_int f_bool ib_list] preslika vrednosti [ib_list] v nov
@@ -65,14 +90,23 @@
  oz. [f_bool].
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_map = ()
+let rec intbool_map f_int f_bool = function
+  | Int(x, xs) -> Int(f_int x, intbool_map f_int f_bool xs)
+  | Bool(x, xs) -> Bool(f_bool x, intbool_map f_int f_bool xs)
+  | Nil -> Nil
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_reverse] obrne vrstni red elementov [intbool_list] seznama.
  Funkcija je repno rekurzivna.
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_reverse = ()
+let rec intbool_reverse ib_list = 
+  let rec ib_reverse acc = function
+    | Nil -> acc
+    | Int(x, xs) -> ib_reverse (Int(x, acc)) xs
+    | Bool(x. xs) -> ib_reverse (Bool(x, acc)) xs
+  in
+  ib_reverse Nil ib_list
 
 (*----------------------------------------------------------------------------*]
  Funkcija [intbool_separate ib_list] loči vrednosti [ib_list] v par [list]
@@ -80,7 +114,13 @@ let rec intbool_reverse = ()
  vrednosti. Funkcija je repno rekurzivna in ohranja vrstni red elementov.
 [*----------------------------------------------------------------------------*)
 
-let rec intbool_separate = ()
+let rec intbool_separate ib_ist = 
+  let rec ib_separate iacc bacc = function
+    | Nil -> (iacc, bacc)
+    | Int(x, xs) -> ib_separate (x :: iacc) bacc xs
+    | Bool(x, xs) -> ib_separate iacc (x :: bacc) xs
+  in
+  ib_separate [] [] (intbool_reverse ib_list)
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Določeni ste bili za vzdrževalca baze podatkov za svetovno priznano čarodejsko
@@ -99,6 +139,10 @@ let rec intbool_separate = ()
 [*----------------------------------------------------------------------------*)
 
 
+type magic = Fire | Frost | Arcane
+
+type specialisation = Historian | Teacher | Researcher
+
 
 (*----------------------------------------------------------------------------*]
  Vsak od čarodejev začne kot začetnik, nato na neki točki postane študent,
@@ -116,6 +160,15 @@ let rec intbool_separate = ()
 [*----------------------------------------------------------------------------*)
 
 
+type status =
+  | Newbie
+  | Student of magic * int
+  | Employed of magic * specialisation
+
+  type wizard = {name : string; status : status}
+
+  let professor = {name = "Matija"; status = Employed(Fire, Teacher)}
+
 
 (*----------------------------------------------------------------------------*]
  Želimo prešteti koliko uporabnikov posamezne od vrst magije imamo na akademiji.
@@ -129,6 +182,12 @@ let rec intbool_separate = ()
 [*----------------------------------------------------------------------------*)
 
 
+type magic_counter = {fire : int; frost : int; arcane : int}
+
+let update counter magic = function
+  | Fire -> {counter with fire = counter.fire + 1}
+  | Frost -> {counter with frost = counter.frost + 1}
+  | Arcane -> {counter with arcane = counter.arcane + 1}
 
 (*----------------------------------------------------------------------------*]
  Funkcija [count_magic] sprejme seznam čarodejev in vrne števec uporabnikov
@@ -138,7 +197,15 @@ let rec intbool_separate = ()
  - : magic_counter = {fire = 3; frost = 0; arcane = 0}
 [*----------------------------------------------------------------------------*)
 
-let rec count_magic = ()
+let count_magic wizard_list =
+  let rec count counter = function
+    | [] -> counter
+    | {name; status} :: wizards -> (
+        match status with
+        | Newbie -> count counter wizards
+        | Student (magic, _) -> count (update counter magic) wizards
+        | Employed (magic, _) -> count (update counter magic) wizards)
+  in count {fire = 0; frost = 0; arcane = 0} wizard_list
 
 (*----------------------------------------------------------------------------*]
  Želimo poiskati primernega kandidata za delovni razpis. Študent lahko postane
@@ -154,4 +221,19 @@ let rec count_magic = ()
  - : string option = Some "Jaina"
 [*----------------------------------------------------------------------------*)
 
-let rec find_candidate = ()
+let find_candidate magic specialisation wizard_list =
+  let year =
+    match specialisation with
+    | Historian -> 3
+    | Researcher -> 4
+    | Teacher -> 5
+  in
+  let rec search = function
+    | [] -> None
+    | {name; status} :: wizards ->
+        match status with
+        | Student (m, y) when m = magic && y >= year -> Some name
+        | _ -> search wizards
+
+  in
+  search wizard_list

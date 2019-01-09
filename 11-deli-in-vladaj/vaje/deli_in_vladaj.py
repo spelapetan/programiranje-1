@@ -86,7 +86,6 @@ def quicksort(a):
 
 
 
-
 ##############################################################################
 # V tabeli želimo poiskati vrednost k-tega elementa po velikosti.
 #
