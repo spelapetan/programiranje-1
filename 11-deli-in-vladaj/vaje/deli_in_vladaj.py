@@ -73,9 +73,9 @@ def quicksort_part(a, start, end):
         # start : indeks -> manjsi
         # indeks -> pivot na pravem mestu
         # indeks + 1 : end -> vecji
-        #uredi manjse
-        #uredi vecji
-        #koncaj
+        # uredi manjse
+        # uredi vecji
+        # koncaj
         quicksort_part(a, start, indeks - 1)
         quicksort_part(a, indeks + 1, end)
     return a
@@ -100,6 +100,7 @@ def quicksort(a):
 # element po velikosti. Funkcija sme spremeniti tabelo [a]. Cilj naloge je, da
 # jo rešite brez da v celoti uredite tabelo [a].
 ##############################################################################
+
 
 def kth_element(a, k):
     return quicksort(a)[k]
