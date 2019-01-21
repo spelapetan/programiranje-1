@@ -56,6 +56,7 @@ module type NAT = sig
   val one : t
   val sestevanje : t -> t -> t
   val odstevanje : t -> t
+  val sub : t -> t -> t
   val mozenje : t -> t -> t
   val to_int : t -> int
   val of_int : int -> t
@@ -80,6 +81,7 @@ module Nat_int : NAT = struct
   let one = 1
   let sestevanje x y = x + y
   let odstevanje x = -x
+  let sub x y = max 0 (x - y)
   let mnozenje x y = x * y
   let to_int x = int of x
   let of_int x = x
@@ -99,11 +101,38 @@ end
 
 module Nat_peano : NAT = struct
 
-  type t = unit (* To morate spremeniti! *)
-  let eq x y = failwith "later"
-  let zero = () (* To morate spremeniti! *)
-  (* Dodajte manjkajoče! *)
-
+  type t = Zero | S of t
+  let rec eq x y = 
+    match (x, y) with
+    | (Zero, Zero) -> true
+    | (S x, S y) > eq x y
+    | _ -> false
+  let zero = Zero
+  let one = S Zero
+  let rec sestevanje x = function
+    | Zero -> x
+    | S y -> S (add x y)
+  let rec sub x y =
+    match (x, y) with
+    | (_, Zero) -> Zero
+    | (Zero, _) -> Zero
+    | (S x, S y) -> sub x y
+  let rec odstevanje x y = 
+    match (x, y) with
+    | (Zero, y) -> -y
+    | (x, Zero) -> x
+    | (S x, S y) -> odstevanje x y
+  let rec mnozenje x y = 
+    match x with
+    | Zero -> Zero
+    | S x -> sestevanje y (mnozenje x y)
+  let rec from_int i =
+    if i <= 0
+    then 0
+    else S (from_int (i-1))
+  let rec to_int = function
+    | Zero -> 0
+    | S x -> 1 + (to_int x)
 end
 
 (*----------------------------------------------------------------------------*]
@@ -127,7 +156,15 @@ end
  - : int = 4950
 [*----------------------------------------------------------------------------*)
 
-let sum_nat_100 (module Nat : NAT) = ()
+let sum_nat_100 (module Nat : NAT) =
+  let hundred = Nat.from_int 100 in
+  let rec sum current hundred acc =
+    if Nat-eq current hundred then
+      acc
+    else
+      sum (Nat.add current Nat.one) (Nat.add acc curent)
+  in
+  sum Nat.zero Nat.zero |> Nat.to_int
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  Now we follow the fable told by John Reynolds in the introduction.
