@@ -57,7 +57,7 @@ module type NAT = sig
   val sestevanje : t -> t -> t
   val odstevanje : t -> t
   val sub : t -> t -> t
-  val mozenje : t -> t -> t
+  val mnozenje : t -> t -> t
   val to_int : t -> int
   val of_int : int -> t
 end
@@ -74,7 +74,7 @@ end
 module Nat_int : NAT = struct
 
   type t = int
-  let eq x y = function
+  let eq x y =
     if x = y then true
     else false
   let zero = 0
@@ -83,7 +83,7 @@ module Nat_int : NAT = struct
   let odstevanje x = -x
   let sub x y = max 0 (x - y)
   let mnozenje x y = x * y
-  let to_int x = int of x
+  let to_int x = x
   let of_int x = x
 end
 
@@ -105,13 +105,13 @@ module Nat_peano : NAT = struct
   let rec eq x y = 
     match (x, y) with
     | (Zero, Zero) -> true
-    | (S x, S y) > eq x y
+    | (S x, S y) -> eq x y
     | _ -> false
   let zero = Zero
   let one = S Zero
   let rec sestevanje x = function
     | Zero -> x
-    | S y -> S (add x y)
+    | S y -> S (sestevanje x y)
   let rec sub x y =
     match (x, y) with
     | (_, Zero) -> Zero
@@ -119,17 +119,16 @@ module Nat_peano : NAT = struct
     | (S x, S y) -> sub x y
   let rec odstevanje x y = 
     match (x, y) with
-    | (Zero, y) -> -y
+    | (Zero, y) -> - odstevanje y Zero
     | (x, Zero) -> x
     | (S x, S y) -> odstevanje x y
   let rec mnozenje x y = 
     match x with
     | Zero -> Zero
     | S x -> sestevanje y (mnozenje x y)
-  let rec from_int i =
-    if i <= 0
-    then 0
-    else S (from_int (i-1))
+  let rec of_int i =
+      if i <= 0 then Zero
+      else S (of_int (i-1))
   let rec to_int = function
     | Zero -> 0
     | S x -> 1 + (to_int x)
@@ -157,12 +156,12 @@ end
 [*----------------------------------------------------------------------------*)
 
 let sum_nat_100 (module Nat : NAT) =
-  let hundred = Nat.from_int 100 in
+  let hundred = Nat.of_int 100 in
   let rec sum current hundred acc =
-    if Nat-eq current hundred then
+    if Nat.eq current hundred then
       acc
     else
-      sum (Nat.add current Nat.one) (Nat.add acc curent)
+      sum (Nat.sestevanje current Nat.one) (Nat.sestevanje acc current)
   in
   sum Nat.zero Nat.zero |> Nat.to_int
 
@@ -179,7 +178,13 @@ let sum_nat_100 (module Nat : NAT) =
 module type COMPLEX = sig
   type t
   val eq : t -> t -> bool
-  (* Dodajte manjkajoče! *)
+  val zero : t
+  val one : t 
+  val i : t 
+  val neg : t -> t
+  val conj : t -> t 
+  val add : t -> t -> t 
+  val mul : t -> t -> t 
 end
 
 (*----------------------------------------------------------------------------*]
@@ -191,8 +196,20 @@ module Cartesian : COMPLEX = struct
 
   type t = {re : float; im : float}
 
-  let eq x y = failwith "later"
-  (* Dodajte manjkajoče! *)
+  let eq x y = x.re = y.re && x.im = y.im
+
+  let zero = {re = 0.; im = 0.}
+  let one = {re = 1.; im = 0.}
+  let i = {re = 0.; im = 1.}
+
+  let neg {re; im} = {re = -. re; im = -. im}
+  let conj {re; im} = {re; im = -. im}
+
+  let add x y = {re = x.re +. y.re; im = x.im +. y.im}
+  let mul x y =
+    let re = x.re *. y.re -. x.im *. y.im in
+    let im = x.re *. y.im +. x.im *. y.re in
+    {re; im}
 
 end
 
@@ -213,8 +230,22 @@ module Polar : COMPLEX = struct
   let rad_of_deg deg = (deg /. 180.) *. pi
   let deg_of_rad rad = (rad /. pi) *. 180.
 
-  let eq x y = failwith "later"
-  (* Dodajte manjkajoče! *)
+  let eq x y = x.magn = y.magn && x.arg = y.arg
+  let zero = {magn = 0.; arg = 0.}
+  let one = {magn = 1.; arg = 0.}
+  let i = {magn = 1.; arg = 90.}
+
+  let neg {magn; arg} = {magn; arg = arg +. 180.}
+  let conj {magn; arg} = {magn; arg = (mod_float (arg +. 180.) 360.)}
+
+  let mul x y = {magn = x.magn *. y.magn; arg = x.arg +. y.arg}
+  let add x y = 
+    let square x = x *. x in
+    let magn = sqrt (square x.magn +. square y.magn +. 2. *. x.magn *. y.magn *. cos (y.arg -. x.arg))
+    and arg = x.arg +.
+                atan2 (y.magn *. sin (y.arg -. x.arg))
+                      (x.magn +. y.magn *. cos (y.arg -. x.arg)) in
+    {magn; arg}
 
 end
 
@@ -232,6 +263,56 @@ end
  [print] (print naj ponovno deluje zgolj na [(string, int) t].
 [*----------------------------------------------------------------------------*)
 
+module type DICT = sig
+  type ('key, 'value) t 
+
+  val empty : ('key, 'value) t
+
+  val get : 'key -> ('key, 'value) t -> 'value option
+  val insert : 'key -> 'value -> ('key, 'value) t -> ('key, 'value) t
+  val print : (string, int) t -> unit
+
+end
+
+
+module Tree_dict : DICT = struct
+  type ('key, 'value) t =
+    | D_Empty
+    | D_Node of ('key, 'value) t * 'key * 'value * ('key, 'value) t
+  
+  let empty = D_Empty
+
+  let d_leaf key value = D_Node (D_Empty, key, value, D_Empty)
+
+  let rec get key = function
+    | D_Empty -> None
+    | D_Node (dl, k, value, dr) ->
+        if k = key then
+          Some value
+        else if key < k then
+          get key dl
+        else
+          get key dr
+
+  let rec insert key value = function
+    | D_Empty -> d_leaf, key, value
+    | D_Node (d_l, k, v, d_r) ->
+    if k = key then
+      D_Node (d_l, k, value, d_r)
+    else if key < k then
+      D_Node (insert key value d_l, k, v, d_r)
+    else
+      D_Node (d_l, k, v, insert key value d_r)
+    
+  let rec print = function
+    | D_Empty -> ()
+    | D_Node (d_l, k, v, d_r) -> (
+      print d_l;
+      print_string (k ^ " : "); print_int v; print_string "\n";
+      print d_r)
+  
+  end
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [count (module Dict) list] prešteje in izpiše pojavitve posameznih
@@ -244,4 +325,17 @@ end
  - : unit = ()
 [*----------------------------------------------------------------------------*)
 
-let count (module Dict : DICT) list = ()
+let count (module Dict : DICT) list = 
+  let rec counter dict = function
+    | [] -> Dict.print dict
+    | x :: xs ->
+      let new_count =
+        match Dict.get x dict with
+        | Some x -> x + 1
+        | None -> 1
+      in 
+      let new_dict = Dict.insert x new_count dict in
+      counter new_dict in
+      counter new_dict xs
+  in 
+  counter Dict.empty list

@@ -102,5 +102,21 @@ def quicksort(a):
 ##############################################################################
 
 
+def kth_el_part(a, k, start, end):
+    if start > end:
+        return None
+    else:
+        pivot_i = pivot_list(a, start, end)
+        if pivot_i == k:
+            return a[pivot_i]
+        elif pivot_i > k:
+            return kth_el_part(a, k, start, pivot_i - 1)
+        else:
+            return kth_el_part(a, k, pivot_i + 1, end)
+
+
 def kth_element(a, k):
-    return quicksort(a)[k]
+    if k > len(a):
+        return None
+    else:
+        return kth_el_part(a, k, 0, len(a)-1)
